@@ -74,9 +74,9 @@ client = storage.Client()
 
 # Define your GCS bucket and file paths
 bucket_name = 'ramanastock'
-nasdaq_symbols_file_path = '/home/ramanasurivattipalli/DailyStockCloud/NASDAQ_SYMBOL.csv'  # Change the path to a suitable location
-output_file_name = '/home/ramanasurivattipalli/DailyStockCloud/Test_output'
-notfound_file_name = '/home/ramanasurivattipalli/DailyStockCloud/Test_notfound'
+nasdaq_symbols_file_path = '/home/ramanasurivattipalli/NASDAQ_SYMBOL.csv'  # Change the path to a suitable location
+output_file_name = '/home/ramanasurivattipalli/Test_output'
+notfound_file_name = '/home/ramanasurivattipalli/Test_notfound'
 
 # Get the bucket
 bucket = client.get_bucket(bucket_name)
@@ -139,4 +139,10 @@ with open(notfound_file_name_with_date, 'w', newline='') as csvfile:
 print(f"Notfound symbols written to {notfound_file_name_with_date}")
 
 # Upload output files to GCS
-output_blob = bucket.blob(output_file_name_with
+output_blob = bucket.blob(output_file_name_with_date)
+output_blob.upload_from_filename(output_file_name_with_date)
+
+notfound_blob = bucket.blob(notfound_file_name_with_date)
+notfound_blob.upload_from_filename(notfound_file_name_with_date)
+
+print("Output files uploaded to Google Cloud Storage.")
