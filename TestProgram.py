@@ -64,7 +64,7 @@ def fetch_batch_data(batch_num, symbols, result_list, not_found_set):
             # Append the batch number, symbol ID, symbol, and difference to the result list
             result_list.append((symbol, difference , available_values[0][1] , available_values[0][0], available_values[-1][1], available_values[-1][0]))
     except Exception as e:
-        print(f"Error processing symbols in batch {symbol}")
+        print(f"Error processing symbols in batch {batch_num}: {e}")
     finally:
         driver.quit()  # Quit the Chrome driver instance after processing the batch
         print(f"Batch {batch_num} completed")
@@ -74,15 +74,15 @@ client = storage.Client()
 
 # Define your GCS bucket and file paths
 bucket_name = 'ramanastock'
-nasdaq_symbols_file_path = 'NASDAQ_SYMBOL.csv'
-output_file_name = 'Test_output'
-notfound_file_name = 'Test_notfound'
+nasdaq_symbols_file_path = '/home/ramanasurivattipalli/DailyStockCloud/NASDAQ_SYMBOL.csv'  # Change the path to a suitable location
+output_file_name = '/home/ramanasurivattipalli/DailyStockCloud/Test_output'
+notfound_file_name = '/home/ramanasurivattipalli/DailyStockCloud/Test_notfound'
 
 # Get the bucket
 bucket = client.get_bucket(bucket_name)
 
 # Download NASDAQ_SYMBOL.csv from GCS
-nasdaq_symbols_blob = bucket.blob(nasdaq_symbols_file_path)
+nasdaq_symbols_blob = bucket.blob('NASDAQ_SYMBOL.csv')
 nasdaq_symbols_blob.download_to_filename(nasdaq_symbols_file_path)
 
 # Open the CSV file and read symbols
@@ -139,10 +139,4 @@ with open(notfound_file_name_with_date, 'w', newline='') as csvfile:
 print(f"Notfound symbols written to {notfound_file_name_with_date}")
 
 # Upload output files to GCS
-output_blob = bucket.blob(output_file_name_with_date)
-output_blob.upload_from_filename(output_file_name_with_date)
-
-notfound_blob = bucket.blob(notfound_file_name_with_date)
-notfound_blob.upload_from_filename(notfound_file_name_with_date)
-
-print("Output files uploaded to Google Cloud Storage.")
+output_blob = bucket.blob(output_file_name_with
