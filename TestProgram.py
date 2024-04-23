@@ -5,7 +5,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from seleniumbase import BaseCase
 from google.cloud import storage
 
-class MyTestClass(BaseCase):
+# Inherit from BaseCase
+class TestProgram(BaseCase):
+    # Function to fetch borrow data for a batch of symbols
     def fetch_batch_data(self, batch_num, symbols, result_list, not_found_set):
         print(f"Starting batch {batch_num}")
         try:
@@ -55,84 +57,91 @@ class MyTestClass(BaseCase):
                 # Append the batch number, symbol ID, symbol, and difference to the result list
                 result_list.append((symbol, difference , available_values[0][1] , available_values[0][0], available_values[-1][1], available_values[-1][0]))
         except Exception as e:
-            print(f"Error processing symbols in batch {symbol}: {e}")
+            print(f"Error processing symbols in batch {symbol}")
         finally:
             print(f"Batch {batch_num} completed")
 
-# Initialize Google Cloud Storage client
-client = storage.Client()
+    def run_test(self):
+        # Initialize Google Cloud Storage client
+        client = storage.Client()
 
-# Define your GCS bucket and file paths
-bucket_name = 'ramanastock'
-nasdaq_symbols_file_path = 'NASDAQ_SYMBOL.csv'
-output_file_name = 'Test_output'
-notfound_file_name = 'Test_notfound'
+        # Define your GCS bucket and file paths
+        bucket_name = 'ramanastock'
+        nasdaq_symbols_file_path = 'NASDAQ_SYMBOL.csv'
+        output_file_name = 'Test_output'
+        notfound_file_name = 'Test_notfound'
 
-# Get the bucket
-bucket = client.get_bucket(bucket_name)
+        # Get the bucket
+        bucket = client.get_bucket(bucket_name)
 
-# Download NASDAQ_SYMBOL.csv from GCS
-nasdaq_symbols_blob = bucket.blob(nasdaq_symbols_file_path)
-nasdaq_symbols_blob.download_to_filename(nasdaq_symbols_file_path)
+        # Download NASDAQ_SYMBOL.csv from GCS
+        nasdaq_symbols_blob = bucket.blob(nasdaq_symbols_file_path)
+        nasdaq_symbols_blob.download_to_filename(nasdaq_symbols_file_path)
 
-# Open the CSV file and read symbols
-with open(nasdaq_symbols_file_path, newline='') as csvfile:
-    reader = csv.DictReader(csvfile)
-    symbols = [row['Symbol'] for row in itertools.islice(reader, 5)]  # Read all symbols from the CSV file
+        # Open the CSV file and read symbols
+        with open(nasdaq_symbols_file_path, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            symbols = [row['Symbol'] for row in itertools.islice(reader, 5)]  # Read all symbols from the CSV file
 
-# Create batches of symbols (adjust batch_size as needed)
-batch_size = 50  # Increase batch size to 50 symbols
-symbol_batches = [symbols[i:i+batch_size] for i in range(0, len(symbols), batch_size)]
+        # Create batches of symbols (adjust batch_size as needed)
+        batch_size = 50  # Increase batch size to 50 symbols
+        symbol_batches = [symbols[i:i+batch_size] for i in range(0, len(symbols), batch_size)]
 
-# Initialize lists and sets to store results
-result_list = []
-not_found_set = set()
+        # Initialize lists and sets to store results
+        result_list = []
+        not_found_set = set()
 
-# Process symbol batches in parallel
-with ThreadPoolExecutor(max_workers=20) as executor:  # Reduce max_workers to 20
-    futures = []
-    for batch_num, batch in enumerate(symbol_batches, 1):
-        future = executor.submit(MyTestClass().fetch_batch_data, batch_num, batch, result_list, not_found_set)
-        futures.append(future)
+        # Process symbol batches in parallel
+        with ThreadPoolExecutor(max_workers=20) as executor:  # Reduce max_workers to 20
+            futures = []
+            for batch_num, batch in enumerate(symbol_batches, 1):
+                future = executor.submit(self.fetch_batch_data, batch_num, batch, result_list, not_found_set)
+                futures.append(future)
 
-    # Wait for all threads to complete
-    for future in as_completed(futures):
-        future.result()
+            # Wait for all threads to complete
+            for future in as_completed(futures):
+                future.result()
 
-# Print the unsorted list of symbols with differences
-print("Unsorted list of symbols with differences:", result_list)
+        # Print the unsorted list of symbols with differences
+        print("Unsorted list of symbols with differences:", result_list)
 
-# Print symbols that were not found
-print("Symbols not found:", not_found_set)
+        # Print symbols that were not found
+        print("Symbols not found:", not_found_set)
 
-# Append today's date to output file name
-today_date = datetime.now().strftime("%Y-%m-%d")
-output_file_name_with_date = f'{output_file_name}_{today_date}.csv'
-notfound_file_name_with_date = f'{notfound_file_name}_{today_date}.csv'
+        # Append today's date to output file name
+        today_date = datetime.now().strftime("%Y-%m-%d")
+        output_file_name_with_date = f'{output_file_name}_{today_date}.csv'
+        notfound_file_name_with_date = f'{notfound_file_name}_{today_date}.csv'
 
-# Write the output set to a CSV file with formatted columns
-with open(output_file_name_with_date, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow([ "Symbol", "Difference", "latest_yesterday","latest_yesterday_available","earliest_today","earliest_today_available"])
-    for row in result_list:
-        writer.writerow(row)
+        # Write the output set to a CSV file with formatted columns
+        with open(output_file_name_with_date, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([ "Symbol", "Difference", "latest_yesterday","latest_yesterday_available","earliest_today","earliest_today_available"])
+            for row in result_list:
+                writer.writerow(row)
 
-print(f"Output written to {output_file_name_with_date}")
+        print(f"Output written to {output_file_name_with_date}")
 
-# Write the notfound set to a CSV file
-with open(notfound_file_name_with_date, 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow(["Symbol"])
-    for symbol in not_found_set:
-        writer.writerow([symbol])
+        # Write the notfound set to a CSV file
+        with open(notfound_file_name_with_date, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Symbol"])
+            for symbol in not_found_set:
+                writer.writerow([symbol])
 
-print(f"Notfound symbols written to {notfound_file_name_with_date}")
+        print(f"Notfound symbols written to {notfound_file_name_with_date}")
 
-# Upload output files to GCS
-output_blob = bucket.blob(output_file_name_with_date)
-output_blob.upload_from_filename(output_file_name_with_date)
+        # Upload output files to GCS
+        output_blob = bucket.blob(output_file_name_with_date)
+        output_blob.upload_from_filename(output_file_name_with_date)
 
-notfound_blob = bucket.blob(notfound_file_name_with_date)
-notfound_blob.upload_from_filename(notfound_file_name_with_date)
+        notfound_blob = bucket.blob(notfound_file_name_with_date)
+        notfound_blob.upload_from_filename(notfound_file_name_with_date)
 
-print("Output files uploaded to Google Cloud Storage.")
+        print("Output files uploaded to Google Cloud Storage.")
+
+    def setUp(self):
+        super().setUp()
+
+# Run the test
+TestProgram('run_test').run()
