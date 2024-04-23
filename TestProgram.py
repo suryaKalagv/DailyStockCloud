@@ -55,9 +55,9 @@ class TestProgram(BaseCase):
                 difference = latest_yesterday_available - earliest_today_available
 
                 # Append the batch number, symbol ID, symbol, and difference to the result list
-                result_list.append((symbol, difference , available_values[0][1] , available_values[0][0], available_values[-1][1], available_values[-1][0]))
+                result_list.append((symbol, difference, available_values[0][1], available_values[0][0], available_values[-1][1], available_values[-1][0]))
         except Exception as e:
-            print(f"Error processing symbols in batch {symbol}")
+            print(f"Error processing symbols in batch {symbol}: {e}")
         finally:
             print(f"Batch {batch_num} completed")
 
@@ -116,7 +116,7 @@ class TestProgram(BaseCase):
         # Write the output set to a CSV file with formatted columns
         with open(output_file_name_with_date, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow([ "Symbol", "Difference", "latest_yesterday","latest_yesterday_available","earliest_today","earliest_today_available"])
+            writer.writerow(["Symbol", "Difference", "latest_yesterday", "latest_yesterday_available", "earliest_today", "earliest_today_available"])
             for row in result_list:
                 writer.writerow(row)
 
