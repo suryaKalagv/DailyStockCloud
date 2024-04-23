@@ -55,7 +55,7 @@ class MyTestClass(BaseCase):
                 # Append the batch number, symbol ID, symbol, and difference to the result list
                 result_list.append((symbol, difference , available_values[0][1] , available_values[0][0], available_values[-1][1], available_values[-1][0]))
         except Exception as e:
-            print(f"Error processing symbols in batch {symbol}")
+            print(f"Error processing symbols in batch {symbol}: {e}")
         finally:
             print(f"Batch {batch_num} completed")
 
