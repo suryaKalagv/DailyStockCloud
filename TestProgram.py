@@ -15,7 +15,7 @@ def fetch_batch_data(batch_num, symbols, result_list, not_found_set):
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    driver = webdriver.Chrome(options=options, executable_path='/usr/local/bin/chromedriver')  # Create a new Chrome driver instance for each thread
+    driver = webdriver.Chrome(options=options)  # Create a new Chrome driver instance for each thread
     try:
         for symbol_id, symbol in enumerate(symbols, 1):
             # Construct the URL with the symbol
