@@ -10,8 +10,12 @@ from google.cloud import storage
 
 # Function to fetch borrow data for a batch of symbols
 def fetch_batch_data(batch_num, symbols, result_list, not_found_set):
-    print(f"Starting batch {batch_num}")
-    driver = webdriver.Chrome()  # Create a new Chrome driver instance for each thread
+    print("Starting batch", batch_num)
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    driver = webdriver.Chrome(options=options, executable_path='/usr/local/bin/chromedriver')  # Create a new Chrome driver instance for each thread
     try:
         for symbol_id, symbol in enumerate(symbols, 1):
             # Construct the URL with the symbol
@@ -74,9 +78,9 @@ client = storage.Client()
 
 # Define your GCS bucket and file paths
 bucket_name = 'ramanastock'
-nasdaq_symbols_file_path = '/home/ramanasurivattipalli/NASDAQ_SYMBOL.csv'  # Change the path to a suitable location
-output_file_name = '/home/ramanasurivattipalli/Test_output'
-notfound_file_name = '/home/ramanasurivattipalli/Test_notfound'
+nasdaq_symbols_file_path = '/home/ramanasurivattipalli/dailystockapp/DailyStockCloud/NASDAQ_SYMBOL.csv'  # Change the path to a suitable location
+output_file_name = '/home/ramanasurivattipalli/dailystockapp/DailyStockCloud/Test_output'
+notfound_file_name = '/home/ramanasurivattipalli/dailystockapp/DailyStockCloud/Test_notfound'
 
 # Get the bucket
 bucket = client.get_bucket(bucket_name)
@@ -109,7 +113,7 @@ with ThreadPoolExecutor(max_workers=20) as executor:  # Reduce max_workers to 20
     for future in as_completed(futures):
         future.result()
 
-# Print the unsorted list of symbols with differences
+# Print the unsorted list of symbols
 print("Unsorted list of symbols with differences:", result_list)
 
 # Print symbols that were not found
@@ -118,7 +122,6 @@ print("Symbols not found:", not_found_set)
 # Append today's date to output file name
 today_date = datetime.now().strftime("%Y-%m-%d")
 output_file_name_with_date = f'{output_file_name}_{today_date}.csv'
-notfound_file_name_with_date = f'{notfound_file_name}_{today_date}.csv'
 
 # Write the output set to a CSV file with formatted columns
 with open(output_file_name_with_date, 'w', newline='') as csvfile:
@@ -130,6 +133,7 @@ with open(output_file_name_with_date, 'w', newline='') as csvfile:
 print(f"Output written to {output_file_name_with_date}")
 
 # Write the notfound set to a CSV file
+notfound_file_name_with_date = f'{notfound_file_name}_{today_date}.csv'
 with open(notfound_file_name_with_date, 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["Symbol"])
